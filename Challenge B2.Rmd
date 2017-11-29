@@ -1,0 +1,94 @@
+---
+title: "Challenge B"
+author: "Fabien Dorati"
+date: "29 novembre 2017"
+output:  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##TASK 1B
+
+Question 1 :
+We have decided to choose the random forest technique. It will predict differents values for the same characteristics using differents features (we will choose to use 5 features that will be randomly chosen) and it make the average to give us the best possible prediction
+
+```{r, include=FALSE echo = FALSE}
+require(tidyverse)
+require(caret)
+require(readxl)
+require(dplyr)
+require(tidyr)
+require(ggplot2)
+require(np)
+require(randomForest)
+training <- read.csv("train.csv")
+test <- read.csv("test.csv")
+```
+
+```{r, echo= FALSE, include=FALSE}
+training2 <- select(training, -Id)
+```
+
+```{r missing data 2, echo= FALSE, include=FALSE}
+remove.vars <- training2 %>% summarise_all(.funs = funs(sum(is.na(.)))) %>% gather(key = "feature", value = "missing.observations") %>% filter(missing.observations > 100) %>% select(feature) %>% unlist
+
+training2 <- training2 %>% select(- one_of(remove.vars))
+
+```
+
+```{r missing data 3, echo= FALSE, include=FALSE}
+
+training2 %>% summarise_all(.funs = funs(sum(is.na(.)))) %>% gather(key = "feature", value = "missing.observations") %>% filter(missing.observations > 0)
+
+training2 <- training2 %>% filter(is.na(GarageType) == FALSE, is.na(MasVnrType) == FALSE, is.na(BsmtFinType2) == FALSE, is.na(BsmtExposure) == FALSE, is.na(Electrical) == FALSE)
+
+training2 %>% summarise_all(.funs = funs(sum(is.na(.)))) %>% gather(key = "feature", value = "missing.observations") %>% filter(missing.observations > 0)
+
+```
+
+```{r housing-step9-sol, echo = FALSE, include=FALSE}
+cat_var <- training2 %>% summarise_all(.funs = funs(is.character(.))) %>% gather(key = "feature", value = "is.chr") %>% filter(is.chr == TRUE) %>% select(feature) %>% unlist
+
+training2 %>% mutate_at(.cols = cat_var, .funs = as.factor)
+```
+
+```{r, include=TRUE,echo=TRUE}
+training_RF <- randomForest(SalePrice~., data=training2, ntree=500, mtry=5, na.action = na.roughfix)
+print(training_RF)
+```
+
+Step 3 
+```{r}
+pre_train_RF <- predict(training_RF, data=test, type="response")
+ggplot(data = pre_train_RF) +
+geom_point(mapping=aes(x = Id, y = SalePrice))
+```
+
+```{r}
+lm_model_2 <- lm(SalePrice ~ MSZoning + LotArea + Neighborhood  + YearBuilt + OverallQual, data = training2)
+summary(lm_model_2)
+prediction <- data.frame(Id = test$Id, SalePrice_predict = predict(lm_model_2, test, type="response"))
+summary(prediction)
+summary(pre_train_RF)
+```
+We can see that the median and the mean are slightly bigger with the ML technique than with the standard linear regression. The quartiles are equivalent but there is huge differences in the minimum and in the maximum. 
+
+
+
+
+
+
+##TASK 3B
+###STEP 1
+```{r, include=FALSE, echo=FALSE}
+CNIL <- read.csv2("OpenCNIL_Organismes_avec_CIL_VD_20171115.csv")
+
+```
+```{r}
+summary(CNIL)
+CNILPD <- table(CNIL$Code_Postal, CNIL$TypeCIL)
+CNILPD
+```
+
