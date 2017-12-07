@@ -1,0 +1,146 @@
+---
+title: "Challenge B"
+author: "Fabien Dorati"
+date: "29 novembre 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##_**TASK 1B**_
+
+###_Step 1 :_
+
+We have decided to choose the random forest technique. This ML technique will predict differents values for the same characteristics using differents features (we will choose to use 5 features that will be randomly chosen) and it make the average to give us the best possible prediction.
+
+```{r, include = FALSE, echo = TRUE}
+require(tidyverse)
+require(caret)
+require(readxl)
+require(dplyr)
+require(tidyr)
+require(ggplot2)
+require(np)
+require(randomForest)
+library(gtrendsR)
+library(Quandl)
+library(stringr)
+training <- read.csv("train.csv")
+test <- read.csv("test.csv")
+```
+###Step2
+
+```{r, echo= TRUE, include=FALSE}
+training2 <- select(training, -Id)
+```
+First, we delete the feature Id since it can't be relevant in order to determine the sale price.
+```{r missing data 2, echo= TRUE, include=FALSE}
+remove.vars <- training2 %>% summarise_all(.funs = funs(sum(is.na(.)))) %>% gather(key = "feature", value = "missing.observations") %>% filter(missing.observations > 100) %>% select(feature) %>% unlist
+
+training2 <- training2 %>% select(- one_of(remove.vars))
+
+```
+
+```{r missing data 3, echo= TRUE, include=FALSE}
+
+training2 %>% summarise_all(.funs = funs(sum(is.na(.)))) %>% gather(key = "feature", value = "missing.observations") %>% filter(missing.observations > 0)
+
+training2 <- training2 %>% filter(is.na(GarageType) == FALSE, is.na(MasVnrType) == FALSE, is.na(BsmtFinType2) == FALSE, is.na(BsmtExposure) == FALSE, is.na(Electrical) == FALSE)
+
+training2 %>% summarise_all(.funs = funs(sum(is.na(.)))) %>% gather(key = "feature", value = "missing.observations") %>% filter(missing.observations > 0)
+
+```
+
+```{r housing-step9-sol, echo = TRUE, include=FALSE}
+cat_var <- training2 %>% summarise_all(.funs = funs(is.character(.))) %>% gather(key = "feature", value = "is.chr") %>% filter(is.chr == TRUE) %>% select(feature) %>% unlist
+
+training2 %>% mutate_at(.cols = cat_var, .funs = as.factor)
+```
+Then we solve the problem of the missing values on the same way that in Challenge A. 
+```{r, include=TRUE,echo=TRUE}
+set.seed(1)
+#We use set.seed to have every time the same model
+training_RF <- randomForest(SalePrice~., data=training2, ntree=500, mtry=5, na.action = na.roughfix)
+print(training_RF)
+```
+We use the randomForest function to create a model that we will be able to use to predict the Sale price of the houses. We choose 500 tries with 5 variables tried at each split. With this model, 85,48% of the variation of SalePrice is explained. Since it is over 80%, we can consider that it is a good model to predict. 
+
+###_Step 3_
+
+Then we create a prediction of the Sale Price with the Random Forest:
+```{r, echo = TRUE, include = TRUE}
+pre_train_RF <- predict(training_RF, data=test, type="response")
+
+```
+We predict the Sale Price thanks to a standard regression (using the regression founded in the solution of Challenge A :
+
+```{r, echo = TRUE, include = TRUE}
+lm_model_2 <- lm(SalePrice ~ MSZoning + LotArea + Neighborhood  + YearBuilt + OverallQual, data = training2)
+summary(lm_model_2)
+prediction <- data.frame(Id = test$Id, SalePrice_predict = predict(lm_model_2, test, type="response"))
+```
+
+Finally, we use the summary function to compare the two predictions : 
+
+```{r, echo = TRUE, include = TRUE}
+summary(prediction)
+summary(pre_train_RF)
+```
+We can see that the median and the mean are slightly bigger with the ML technique than with the standard linear regression. The quartiles are equivalent but there is huge differences in the minimum and in the maximum. The minimum with the Random Forest is 92 436 dollars, that is a more realistic case than the prediction of the standard linear model (11 634 dollars).  
+
+
+
+
+
+
+##_**TASK 3B**_ :
+
+```{r, echo= TRUE, include=FALSE}
+require("data.table")
+```
+
+###_Step 1_
+
+We import the CNIL DATA thanks to the read.csv2 function : 
+```{r, include=FALSE, echo=TRUE}
+CNIL <- read.csv2("OpenCNIL_Organismes_avec_CIL_VD_20171115.csv")
+#We import the File OpenCNIL using the read.csv2 function. 
+
+```
+
+###_Step 2_
+
+We want to create a table with the number of organizations that has nominated a CNIL per department. First we define a variable Dep with the first two number of the "Code Postal": 
+```{r, echo = TRUE, include = FALSE}
+CNIL<- CNIL %>% mutate(Dep=substr(Code_Postal,1,2))
+CNIL<- CNIL %>% mutate(Dep_int=as.integer(Dep))
+```
+
+We remove the potential duplicates that we could have on the data :
+```{r, echo = TRUE, include = FALSE}
+CNIL<-distinct(CNIL)
+```
+
+Then we create the related table: 
+```{r, echo = TRUE, include = TRUE}
+CNILPD <- table(CNIL$Dep_int, CNIL$TypeCIL)
+CNILPD
+```
+
+###_Step 3_ :
+
+```{r, echo = TRUE, include = TRUE}
+SIREN <- read.csv2("sir.csv",nrows=100)
+
+```
+
+```{r, echo = TRUE, include = TRUE}
+f <- function(SIREN, pos) merge(CNIL, SIREN, by = intersect("ï..Siren", "SIREN" ))
+SIREN2 <-read_csv2_chunked(file="sir.csv", DataFrameCallback$new(f), chunk_size = 10000)
+```
+
+```{r, echo = TRUE, include = TRUE}
+Merger <- merge(CNIL, SIREN, by = intersect("ï..Siren", "Siren"))
+```
