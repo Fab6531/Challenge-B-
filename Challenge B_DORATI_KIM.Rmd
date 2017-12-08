@@ -10,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 GitHub Link : https://github.com/Fab6531/Challenge-B-
 
-##_**TASK 1B**_
+## _**TASK 1B**_
 
-###_Step 1 :_
+### _Step 1 :_
 
 We have decided to choose the random forest technique. This ML technique will predict differents values for the same characteristics using differents features (we will choose to use 5 features that will be randomly chosen) and it make the average to give us the best possible prediction.
 
@@ -31,7 +31,7 @@ library(stringr)
 training <- read.csv("train.csv")
 test <- read.csv("test.csv")
 ```
-###_Step 2_ :
+### _Step 2_ :
 
 ```{r, echo= TRUE, include=FALSE}
 training2 <- select(training, -Id)
@@ -68,7 +68,7 @@ print(training_RF)
 ```
 We use the randomForest function to create a model that we will be able to use to predict the Sale price of the houses. We choose 500 tries with 5 variables tried at each split. With this model, 85,48% of the variation of SalePrice is explained. Since it is over 80%, we can consider that it is a good model to predict. 
 
-###_Step 3_ :
+### _Step 3_ :
 
 Then we create a prediction of the Sale Price with the Random Forest:
 ```{r, echo = TRUE, include = TRUE}
@@ -92,7 +92,7 @@ summary(pre_train_RF)
 We can see that the median and the mean are slightly bigger with the ML technique than with the standard linear regression. The quartiles are equivalent but there is huge differences in the minimum and in the maximum. The minimum with the Random Forest is 92 436 dollars, that is a more realistic case than the prediction of the standard linear model (11 634 dollars).  
 
 
-##_**TASK 2B**_ : 
+## _**TASK 2B**_ : 
 
 ### Before Starting 
 Let's install packages and run them. I use np package for non parametric regression(npreg) and ggplot for plotting as usual. 
@@ -291,13 +291,13 @@ So for higher accuracy of our model, we need to compare both MSE on trainset and
 
 
 
-##_**TASK 3B**_ :
+## _**TASK 3B**_ :
 
 ```{r, echo= FALSE, include=FALSE}
 require("data.table")
 ```
 
-###_Step 1_
+### _Step 1_
 
 We import the CNIL DATA thanks to the read.csv2 function : 
 ```{r, include=FALSE, echo=FALSE}
@@ -306,7 +306,7 @@ CNIL <- read.csv2("OpenCNIL_Organismes_avec_CIL_VD_20171115.csv")
 
 ```
 
-###_Step 2_
+### _Step 2_
 
 We want to create a table with the number of organizations that has nominated a CNIL per department. First we define a variable Dep with the first two number of the "Code Postal": 
 ```{r, echo = TRUE, include = FALSE}
@@ -325,7 +325,7 @@ CNILPD <- table(CNIL$Dep_int, CNIL$TypeCIL)
 CNILPD
 ```
 
-###_Step 3_ :
+### _Step 3_ :
 
 First we import 10000 rows from the data SIREN
 ```{r, echo = TRUE, include = FALSE}
@@ -352,7 +352,7 @@ So we make a simple merger to have an sample of what we would get with the previ
 Merger <- merge.data.frame(CNIL, SIREN, by = 'SIREN')
 ```
 
-###_Step 4_
+### _Step 4_
 
 We use the ggplot function in order to create an histogram with the number of firms on the y-axe and the size range as abscissa. 
 ```{r, echo = TRUE, include = TRUE}
